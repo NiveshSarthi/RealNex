@@ -12,8 +12,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.981.0",
+    "@aws-sdk/lib-storage": "^3.981.0",
     "amqplib": "^0.10.9",
-    "aws-sdk": "^2.1693.0",
     "axios": "^1.13.4",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

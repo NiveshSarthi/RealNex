@@ -89,7 +89,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
-        setCollapsed(false); // Mobile handles visibility via sidebarOpen
+        setIsCollapsed(false); // Mobile handles visibility via sidebarOpen
       }
     };
     window.addEventListener('resize', handleResize);
@@ -216,12 +216,12 @@ export default function Layout({ children }) {
       <div
         className={`
           hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r border-border bg-card transition-all duration-300 ease-in-out z-30
-          ${collapsed ? 'w-20' : 'w-64'}
+          ${isCollapsed ? 'w-20' : 'w-64'}
         `}
       >
         {/* Sidebar Header */}
         <div className="flex items-center h-16 flex-shrink-0 px-4 border-b border-border/50 bg-card/50 backdrop-blur-md">
-          {!collapsed ? (
+          {!isCollapsed ? (
             <span className="text-xl font-bold font-display tracking-tight text-white animate-fade-in truncate flex items-center">
               RealNe<span className="text-2xl text-primary -ml-0.5">X</span>
             </span>
@@ -234,7 +234,7 @@ export default function Layout({ children }) {
         <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide py-4">
           <nav className="flex-1 px-3 space-y-1">
             {navigation.map((item) => (
-              <NavItem key={item.name} item={item} isCollapsed={collapsed} />
+              <NavItem key={item.name} item={item} isCollapsed={isCollapsed} />
             ))}
           </nav>
         </div>
@@ -242,11 +242,11 @@ export default function Layout({ children }) {
         {/* Sidebar Footer */}
         <div className="flex-shrink-0 p-4 border-t border-border/50 bg-card/50 backdrop-blur-md">
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => setIsCollapsed(!isCollapsed)}
             className="w-full flex items-center justify-center p-2 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
-            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {collapsed ? (
+            {isCollapsed ? (
               <ChevronRightIcon className="h-5 w-5" />
             ) : (
               <div className="flex items-center w-full">
@@ -260,18 +260,18 @@ export default function Layout({ children }) {
             onClick={handleLogout}
             className={`
               w-full flex items-center p-2 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors
-              ${collapsed ? 'justify-center' : ''}
+              ${isCollapsed ? 'justify-center' : ''}
             `}
             title="Logout"
           >
-            <ArrowRightOnRectangleIcon className={`h-5 w-5 ${collapsed ? '' : 'mr-3'}`} />
-            {!collapsed && <span className="text-sm font-medium">Logout</span>}
+            <ArrowRightOnRectangleIcon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
+            {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
+      <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
         {/* Topbar */}
         <div className="sticky top-0 z-20 flex-shrink-0 flex h-16 bg-background/80 backdrop-blur-md border-b border-border shadow-soft">
           <button

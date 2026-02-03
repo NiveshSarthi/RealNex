@@ -1,7 +1,8 @@
 const { exec } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
-const AWS = require('aws-sdk');
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 const { query } = require('../config/database');
 
 class BackupService {
@@ -11,9 +12,11 @@ class BackupService {
 
     // AWS S3 configuration
     if (process.env.AWS_ACCESS_KEY_ID) {
-      this.s3 = new AWS.S3({
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      this.s3 = new S3Client({
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
         region: process.env.AWS_REGION || 'us-east-1'
       });
       this.s3Bucket = process.env.AWS_BACKUP_BUCKET;
@@ -206,17 +209,20 @@ class BackupService {
       }
 
       const fileContent = await fs.readFile(filepath);
-      const uploadParams = {
-        Bucket: this.s3Bucket,
-        Key: `backups/${filename}`,
-        Body: fileContent,
-        Metadata: {
-          'backup-timestamp': new Date().toISOString(),
-          'environment': process.env.NODE_ENV || 'development'
+      const upload = new Upload({
+        client: this.s3,
+        params: {
+          Bucket: this.s3Bucket,
+          Key: `backups/${filename}`,
+          Body: fileContent,
+          Metadata: {
+            'backup-timestamp': new Date().toISOString(),
+            'environment': process.env.NODE_ENV || 'development'
+          }
         }
-      };
+      });
 
-      const result = await this.s3.upload(uploadParams).promise();
+      const result = await upload.done();
       console.log(`☁️ Backup uploaded to S3: ${result.Location}`);
 
       return result;
@@ -233,15 +239,22 @@ class BackupService {
         throw new Error('S3 not configured');
       }
 
-      const downloadParams = {
+      const command = new GetObjectCommand({
         Bucket: this.s3Bucket,
         Key: `backups/${filename}`
-      };
+      });
 
-      const result = await this.s3.getObject(downloadParams).promise();
+      const result = await this.s3.send(command);
       const localPath = path.join(this.backupDir, `downloaded_${filename}`);
 
-      await fs.writeFile(localPath, result.Body);
+      // SDK v3 returns a stream for result.Body
+      const chunks = [];
+      for await (const chunk of result.Body) {
+        chunks.push(chunk);
+      }
+      const buffer = Buffer.concat(chunks);
+
+      await fs.writeFile(localPath, buffer);
       console.log(`☁️ Backup downloaded from S3: ${localPath}`);
 
       return localPath;

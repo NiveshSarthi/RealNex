@@ -1,0 +1,29 @@
+[
+  {
+    "column_name": "updated_at"
+  },
+  {
+    "column_name": "created_at"
+  },
+  {
+    "column_name": "id"
+  },
+  {
+    "column_name": "price_monthly"
+  },
+  {
+    "column_name": "price_yearly"
+  },
+  {
+    "column_name": "features"
+  },
+  {
+    "column_name": "is_active"
+  },
+  {
+    "column_name": "name"
+  },
+  {
+    "column_name": "tier"
+  }
+]

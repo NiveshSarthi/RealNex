@@ -1,0 +1,5 @@
+﻿[dotenv@17.2.3] injecting env (21) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+organizations_pkey (p): PRIMARY KEY (id)
+users_pkey (p): PRIMARY KEY (id)
+users_email_key (u): UNIQUE (email)
+users_organization_id_fkey (f): FOREIGN KEY (organization_id) REFERENCES organizations(id)

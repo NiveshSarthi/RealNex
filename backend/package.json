@@ -1,0 +1,43 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "amqplib": "^0.10.9",
+    "aws-sdk": "^2.1693.0",
+    "axios": "^1.13.4",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
+    "jsforce": "^3.10.13",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
+    "nodemailer": "^7.0.13",
+    "openai": "^6.17.0",
+    "pg": "^8.17.2",
+    "razorpay": "^2.9.6",
+    "redis": "^5.10.0",
+    "sendgrid": "^5.2.3",
+    "shopify-api-node": "^3.15.0",
+    "stripe": "^20.3.0",
+    "uuid": "^13.0.0",
+    "woocommerce-api": "^1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

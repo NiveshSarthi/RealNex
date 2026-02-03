@@ -1,0 +1,57 @@
+[
+  {
+    "column_name": "updated_at",
+    "is_nullable": "YES",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "organization_id",
+    "is_nullable": "NO",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "plan_id",
+    "is_nullable": "NO",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "cancel_at_period_end",
+    "is_nullable": "YES",
+    "data_type": "boolean"
+  },
+  {
+    "column_name": "created_at",
+    "is_nullable": "YES",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "id",
+    "is_nullable": "NO",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "current_period_start",
+    "is_nullable": "YES",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "current_period_end",
+    "is_nullable": "YES",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "status",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "razorpay_subscription_id",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "stripe_subscription_id",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  }
+]

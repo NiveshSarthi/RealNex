@@ -1,0 +1,12 @@
+--- Trying User: synditech, Pwd: synditech_password ---
+Error: password authentication failed for user "synditech"
+--- Trying User: synditech, Pwd: password ---
+Error: password authentication failed for user "synditech"
+--- Trying User: synditech, Pwd:  ---
+Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+--- Trying User: postgres, Pwd: synditech_password ---
+Error: password authentication failed for user "postgres"
+--- Trying User: postgres, Pwd: password ---
+Error: password authentication failed for user "postgres"
+--- Trying User: postgres, Pwd:  ---
+Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string

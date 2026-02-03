@@ -3,7 +3,17 @@ require('dotenv').config();
 
 // Redis client configuration
 const redisClient = process.env.REDIS_HOST ? redis.createClient({
-  url: `redis://${process.env.REDIS_PASSWORD ? `:${process.env.REDIS_PASSWORD}@` : ''}${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`
+  url: `redis://${process.env.REDIS_PASSWORD ? `:${process.env.REDIS_PASSWORD}@` : ''}${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`,
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries > 5) {
+        console.warn('Redis: Max retries reached. Stopping reconnection attempts.');
+        return new Error('Redis connection failed');
+      }
+      return Math.min(retries * 100, 3000);
+    },
+    connectTimeout: 5000
+  }
 }) : null;
 
 if (redisClient) {
@@ -17,7 +27,12 @@ if (redisClient) {
   });
 
   redisClient.on('error', (err) => {
-    console.error('Redis connection error:', err);
+    // Only log once every few minutes if it's a persistent connection error
+    if (err.code === 'ECONNREFUSED') {
+      console.warn('Redis connection refused. Ensure Redis is running and REDIS_HOST is correct.');
+    } else {
+      console.error('Redis connection error:', err);
+    }
   });
 
   redisClient.on('end', () => {
@@ -33,7 +48,9 @@ const connectRedis = async () => {
       await redisClient.connect();
     }
   } catch (err) {
-    console.error('Redis connection failed (non-fatal):', err.message);
+    if (err.code !== 'ECONNREFUSED') {
+      console.error('Redis connection failed:', err.message);
+    }
   }
 };
 

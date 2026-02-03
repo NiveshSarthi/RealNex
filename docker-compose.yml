@@ -1,213 +1,30 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: synditech-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: synditech_dev
-      POSTGRES_USER: synditech
-      POSTGRES_PASSWORD: synditech_password
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - synditech-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U synditech -d synditech_dev"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: synditech-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass synditech_redis_password
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - synditech-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # RabbitMQ Message Queue
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: synditech-rabbitmq
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: synditech
-      RABBITMQ_DEFAULT_PASS: synditech_rabbitmq_password
-      RABBITMQ_DEFAULT_VHOST: synditech_vhost
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - synditech-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # SyndiTech Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: synditech-backend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      DB_HOST: 72.61.248.175
-      DB_PORT: 5443
-      DB_NAME: postgres
-      DB_USER: postgres
-      DB_PASSWORD: rr5inCRtzjDCFOQUkv2vrE0WDlnAWhSGhYGq30mxJWeLJYCG9oMVL0L39UjR2FTt
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: synditech_redis_password
-      RABBITMQ_URL: amqp://synditech:synditech_rabbitmq_password@rabbitmq:5672/synditech_vhost
-      JWT_SECRET: your_super_secret_jwt_key_here_change_in_production
-      WHATSAPP_ACCESS_TOKEN: your_whatsapp_access_token
-      WHATSAPP_PHONE_NUMBER_ID: your_phone_number_id
-      WHATSAPP_BUSINESS_ACCOUNT_ID: your_business_account_id
-      WHATSAPP_WEBHOOK_VERIFY_TOKEN: your_webhook_verify_token
-      RAZORPAY_KEY_ID: your_razorpay_key_id
-      RAZORPAY_KEY_SECRET: your_razorpay_key_secret
-      PAYU_MERCHANT_KEY: your_payu_merchant_key
-      PAYU_MERCHANT_SALT: your_payu_merchant_salt
-      CASHFREE_APP_ID: your_cashfree_app_id
-      CASHFREE_SECRET_KEY: your_cashfree_secret_key
-      EMAIL_PROVIDER: sendgrid
-      SENDGRID_API_KEY: your_sendgrid_api_key
-      EMAIL_FROM: noreply@synditech.com
-      FRONTEND_URL: http://localhost:3000
-      BACKEND_URL: http://localhost:3001
     ports:
       - "3001:3001"
-    depends_on:
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - synditech-network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/monitoring/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      # Database and other connection strings should be provided via environment files
+    restart: always
 
-  # SyndiTech Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: synditech-frontend
-    restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-      NODE_ENV: development
     ports:
       - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
     depends_on:
       - backend
-    networks:
-      - synditech-network
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Nginx Reverse Proxy (for production)
-  nginx:
-    image: nginx:alpine
-    container_name: synditech-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      - backend
-      - frontend
-    networks:
-      - synditech-network
-    profiles:
-      - production
-
-  # pgAdmin (Database management - development only)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: synditech-pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@synditech.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
-    networks:
-      - synditech-network
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    profiles:
-      - development
-
-  # Redis Commander (Redis management - development only)
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: synditech-redis-commander
-    restart: unless-stopped
-    environment:
-      REDIS_HOSTS: local:redis:6379:0:synditech_redis_password
-    ports:
-      - "8081:8081"
-    depends_on:
-      - redis
-    networks:
-      - synditech-network
-    profiles:
-      - development
-
-volumes:
-  postgres_data:
-  redis_data:
-  rabbitmq_data:
-  pgadmin_data:
-  nginx_logs:
+    restart: always
 
 networks:
-  synditech-network:
-    driver: bridge
+  default:
+    name: realnex_network

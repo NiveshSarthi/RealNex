@@ -47,9 +47,7 @@ const CampaignCard = ({ campaign, onEdit, onSend, onView, onDelete, onAnalytics 
               {getStatusIcon(campaign.status)}
             </div>
             <div>
-              <h3 className="text-lg font-bold font-display text-white leading-tight">
-                {campaign.name}
-              </h3>
+              {campaign.name || campaign.template_name || 'Untitled Campaign'}
               <p className="text-xs text-gray-500 font-mono mt-1">
                 Created {new Date(campaign.created_at).toLocaleDateString()}
               </p>
@@ -68,13 +66,13 @@ const CampaignCard = ({ campaign, onEdit, onSend, onView, onDelete, onAnalytics 
           <div>
             <p className="text-[10px] font-semibold text-gray-500">RECIPIENTS</p>
             <p className="text-lg font-bold text-white">
-              {campaign.total_recipients || 0}
+              {campaign.total_contacts || 0}
             </p>
           </div>
           <div>
             <p className="text-[10px] font-semibold text-gray-500">SENT</p>
             <p className="text-lg font-bold text-primary">
-              {campaign.sent_count || 0}
+              {campaign.stats?.sent || 0}
             </p>
           </div>
         </div>
@@ -190,14 +188,16 @@ export default function Campaigns() {
   const fetchCampaigns = async () => {
     try {
       const response = await campaignsAPI.getCampaigns({ limit: 50 });
-      setCampaigns(response.data.data);
+      // V1 returns array directly or wrapped based on implementation
+      // Assuming it's directly an array based on doc
+      const data = response.data;
+      setCampaigns(Array.isArray(data) ? data : (data.data || []));
     } catch (error) {
       console.error('Failed to fetch campaigns:', error);
       // Mock data for demo if API fails
       setCampaigns([
-        { id: 1, name: 'Diwali Offer 2024', status: 'completed', total_recipients: 1200, sent_count: 1180, created_at: '2023-10-15', description: 'Festive season promotional blast' },
-        { id: 2, name: 'New Project Launch', status: 'running', total_recipients: 5000, sent_count: 2400, created_at: '2023-11-01', description: 'Announcing the new luxury towers in downtown.' },
-        { id: 3, name: 'Follow-up Sequence', status: 'draft', total_recipients: 0, sent_count: 0, created_at: '2023-11-05', description: 'Automated follow-ups for cold leads.' },
+        { _id: '1', name: 'Diwali Offer 2024', status: 'completed', stats: { sent: 1180, read: 600 }, total_contacts: 1200, created_at: '2023-10-15', description: 'Festive season promotional blast' },
+        { _id: '2', name: 'New Project Launch', status: 'running', stats: { sent: 2400, read: 1200 }, total_contacts: 5000, created_at: '2023-11-01', description: 'Announcing the new luxury towers in downtown.' },
       ]);
     } finally {
       setLoading(false);
@@ -206,10 +206,22 @@ export default function Campaigns() {
 
   const fetchStats = async () => {
     try {
-      const response = await campaignsAPI.getStats();
-      setStats(response.data.data);
+      // V1 doesn't explicitly have a global /stats in the doc for campaigns, 
+      // but we can calculate from list or use separate if implemented
+      const response = await campaignsAPI.getCampaigns();
+      const campaignsList = response.data;
+
+      const statsObj = {
+        total_campaigns: campaignsList.length,
+        completed_campaigns: campaignsList.filter(c => c.status === 'completed').length,
+        running_campaigns: campaignsList.filter(c => c.status === 'running').length,
+        avg_response_rate: campaignsList.length > 0
+          ? (campaignsList.reduce((acc, curr) => acc + (curr.stats?.read || 0), 0) /
+            campaignsList.reduce((acc, curr) => acc + (curr.stats?.sent || 1), 0) * 100).toFixed(1)
+          : 0
+      };
+      setStats(statsObj);
     } catch (error) {
-      // Mock stats
       setStats({
         total_campaigns: 12,
         completed_campaigns: 8,
@@ -233,7 +245,7 @@ export default function Campaigns() {
       return;
     }
     try {
-      await campaignsAPI.deleteCampaign(campaign.id);
+      await campaignsAPI.deleteCampaign(campaign._id || campaign.id);
       toast.success('Campaign deleted');
       fetchCampaigns();
     } catch (e) {
@@ -333,7 +345,7 @@ export default function Campaigns() {
           ) : (
             campaigns.map((campaign) => (
               <CampaignCard
-                key={campaign.id}
+                key={campaign._id}
                 campaign={campaign}
                 onEdit={handleEdit}
                 onSend={handleSend}

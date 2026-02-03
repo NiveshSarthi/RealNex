@@ -30,7 +30,8 @@ export default function QuickRepliesList() {
   const fetchReplies = async () => {
     try {
       const res = await quickRepliesAPI.getReplies();
-      setReplies(res.data.data || []);
+      const data = res.data;
+      setReplies(Array.isArray(data) ? data : (data.data || []));
     } catch (error) {
       console.error('Error fetching replies:', error);
     } finally {
@@ -91,8 +92,8 @@ export default function QuickRepliesList() {
                   key={cat}
                   onClick={() => setFilter(cat)}
                   className={`${filter === cat
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
                     } whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm capitalize transition-colors`}
                 >
                   {cat}

@@ -80,23 +80,25 @@ router.get('/conversations', authenticate, async (req, res) => {
     // Get conversation trends
     const trendsResult = await query(`
       SELECT
-        DATE(created_at) as date,
+        DATE(c.created_at) as date,
         COUNT(*) as count
-      FROM conversations
-      WHERE organization_id = $1
-        AND created_at >= CURRENT_DATE - INTERVAL '${period} days'
-      GROUP BY DATE(created_at)
+      FROM conversations c
+      JOIN contacts co ON c.contact_id = co.id
+      WHERE co.organization_id = $1
+        AND c.created_at >= CURRENT_DATE - INTERVAL '${period} days'
+      GROUP BY DATE(c.created_at)
       ORDER BY date
     `, [organizationId]);
 
     // Get conversation status breakdown
     const statusResult = await query(`
       SELECT
-        status,
+        c.status,
         COUNT(*) as count
-      FROM conversations
-      WHERE organization_id = $1
-      GROUP BY status
+      FROM conversations c
+      JOIN contacts co ON c.contact_id = co.id
+      WHERE co.organization_id = $1
+      GROUP BY c.status
     `, [organizationId]);
 
     // Get channel breakdown

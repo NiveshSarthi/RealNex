@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 
-// @route   GET /api/leads
+// @route   GET /api/v1/contacts
 // @desc    Get all leads
 // @access  Private
 router.get('/', authenticate, async (req, res) => {
@@ -42,7 +42,7 @@ router.get('/', authenticate, async (req, res) => {
     }
 });
 
-// @route   POST /api/leads
+// @route   POST /api/v1/contacts
 // @desc    Create a new lead
 // @access  Private
 router.post('/', authenticate, async (req, res) => {

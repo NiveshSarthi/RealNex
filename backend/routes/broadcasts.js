@@ -8,7 +8,7 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-// @route   GET /api/broadcasts
+// @route   GET /api/v1/campaigns
 // @desc    Get all broadcasts for organization
 // @access  Private
 router.get('/', authenticate, async (req, res) => {
@@ -39,7 +39,7 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/broadcasts/:id
+// @route   GET /api/v1/campaigns/:id
 // @desc    Get broadcast by ID
 // @access  Private
 router.get('/:id', authenticate, async (req, res) => {
@@ -75,7 +75,7 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/broadcasts
+// @route   POST /api/v1/campaigns
 // @desc    Create a new broadcast
 // @access  Private
 router.post('/', authenticate, async (req, res) => {
@@ -127,7 +127,7 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// @route   PUT /api/broadcasts/:id
+// @route   PUT /api/v1/campaigns/:id
 // @desc    Update broadcast
 // @access  Private
 router.put('/:id', authenticate, async (req, res) => {
@@ -166,7 +166,7 @@ router.put('/:id', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/broadcasts/:id/send
+// @route   POST /api/v1/campaigns/:id/send
 // @desc    Send broadcast
 // @access  Private
 router.post('/:id/send', authenticate, async (req, res) => {
@@ -275,7 +275,7 @@ router.post('/:id/send', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/broadcasts/:id/recipients
+// @route   GET /api/v1/campaigns/:id/recipients
 // @desc    Get broadcast recipients
 // @access  Private
 router.get('/:id/recipients', authenticate, async (req, res) => {
@@ -318,7 +318,7 @@ router.get('/:id/recipients', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/broadcasts/:id/audience-size
+// @route   POST /api/v1/campaigns/:id/audience-size
 // @desc    Calculate audience size for broadcast
 // @access  Private
 router.post('/:id/audience-size', authenticate, async (req, res) => {
@@ -345,7 +345,7 @@ router.post('/:id/audience-size', authenticate, async (req, res) => {
   }
 });
 
-// @route   DELETE /api/broadcasts/:id
+// @route   DELETE /api/v1/campaigns/:id
 // @desc    Delete broadcast
 // @access  Private
 router.delete('/:id', authenticate, async (req, res) => {
@@ -391,7 +391,7 @@ router.delete('/:id', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/broadcasts/stats/overview
+// @route   GET /api/v1/campaigns/stats/overview
 // @desc    Get broadcast statistics
 // @access  Private
 router.get('/stats/overview', authenticate, async (req, res) => {
@@ -404,6 +404,44 @@ router.get('/stats/overview', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Get broadcast stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/v1/campaigns/:id/logs
+// @desc    Get broadcast delivery logs
+// @access  Private
+router.get('/:id/logs', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, limit = 50, offset = 0 } = req.query;
+
+    // Check if broadcast belongs to organization
+    const broadcast = await Broadcast.findById(id);
+    if (!broadcast || broadcast.organizationId !== req.user.organizationId) {
+      return res.status(404).json({
+        success: false,
+        message: 'Broadcast not found'
+      });
+    }
+
+    // TODO: Implement proper broadcast logs - messages table doesn't have broadcast_id
+    // For now return empty array
+    const result = { rows: [] };
+
+    res.json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      }
+    });
+  } catch (error) {
+    console.error('Get broadcast logs error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

@@ -87,7 +87,7 @@ app.use('/api/calculator', calculatorRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/templates', templateRoutes);
+app.use('/api/v1/templates', templateRoutes);
 
 // New Routes
 app.use('/api/ai', aiRoutes);
@@ -95,7 +95,7 @@ app.use('/api/network', networkRoutes);
 app.use('/api/lms', lmsRoutes);
 app.use('/api/meta-ads', metaAdsRoutes);
 app.use('/api/drip-sequences', dripSequencesRoutes);
-app.use('/api/leads', leadsRoutes);
+app.use('/api/v1/contacts', leadsRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

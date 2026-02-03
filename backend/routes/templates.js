@@ -4,7 +4,7 @@ const { query } = require('../config/database');
 
 const router = express.Router();
 
-// @route   GET /api/templates
+// @route   GET /api/v1/templates
 // @desc    Get all templates for organization
 // @access  Private
 router.get('/', authenticate, async (req, res) => {
@@ -44,7 +44,7 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/templates/:id
+// @route   GET /api/v1/templates/:id
 // @desc    Get template by ID
 // @access  Private
 router.get('/:id', authenticate, async (req, res) => {
@@ -76,7 +76,7 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/templates
+// @route   POST /api/v1/templates
 // @desc    Create new template
 // @access  Private
 router.post('/', authenticate, async (req, res) => {

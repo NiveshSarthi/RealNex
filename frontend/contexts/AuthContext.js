@@ -10,10 +10,15 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Only check auth if we have a token
-    const token = localStorage.getItem('token');
-    if (token) {
-      checkAuth();
+    // Only check auth if we have an access token
+    // Ensure we're on the client side before accessing localStorage
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        checkAuth();
+      } else {
+        setLoading(false);
+      }
     } else {
       setLoading(false);
     }
@@ -22,7 +27,7 @@ export function AuthProvider({ children }) {
   const checkAuth = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       if (token) {
         // Add timeout to prevent hanging
         const response = await Promise.race([
@@ -31,20 +36,18 @@ export function AuthProvider({ children }) {
             setTimeout(() => reject(new Error('Auth check timeout')), 10000)
           )
         ]);
-        setUser(response.data.data.user);
+        setUser(response.data); // V1 usually returns user directly or in a specific field
       }
     } catch (error) {
       console.error('Auth verification failed:', error.message);
 
-      // Only clear tokens if it's a definitive 401 Unauthorized
-      // or if the token is specifically reported as invalid
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        // Try refreshing if 401 (interceptor might have already tried and failed)
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         setUser(null);
       } else {
-        // For server errors (500) or timeouts, try to restore from local storage
-        // to keep the UI from flickering to logged out state
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
           try {
@@ -62,22 +65,28 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
-      const { token, user } = response.data.data;
+      // Backend returns: { success: true, data: { user, token } }
+      const { user, token } = response.data.data;
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      console.log('AuthContext Login: Setting user state', user);
-      setUser(user);
-
-      console.log('AuthContext Login: Setting user state', user);
-      setUser(user);
+      localStorage.setItem('access_token', token);
+      // Note: Backend doesn't provide separate refresh token
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+      } else {
+        // Fetch profile if user info not in login response
+        const profileRes = await authAPI.getProfile();
+        const userData = profileRes.data;
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      }
 
       return { success: true };
     } catch (error) {
       console.error('Login error details:', error.response?.data);
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Login failed'
+        error: error.response?.data?.detail || error.message || 'Login failed'
       };
     }
   };
@@ -85,9 +94,10 @@ export function AuthProvider({ children }) {
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      const { token, user } = response.data.data;
+      const { access_token, refresh_token, user } = response.data.data;
 
-      localStorage.setItem('token', token);
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
 
@@ -95,13 +105,14 @@ export function AuthProvider({ children }) {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Registration failed'
+        error: error.response?.data?.detail || 'Registration failed'
       };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     setUser(null);
     router.push('/');

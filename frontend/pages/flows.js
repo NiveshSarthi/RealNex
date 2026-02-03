@@ -36,14 +36,11 @@ export default function Flows() {
         setLoading(true);
         try {
             const res = await workflowsAPI.getWorkflows();
-            setWorkflows(res.data.data || []);
+            // Assuming res.data is the list of workflows in V1
+            const data = res.data;
+            setWorkflows(Array.isArray(data) ? data : (data.data || []));
         } catch (error) {
             console.error('Error fetching workflows:', error);
-            // setWorkflows([
-            //     { id: '1', name: 'Welcome Sequence', status: 'active', description: 'Send welcome message, wait 2 hours, send product info, verify reply.', n8n_workflow_id: 'mock-1' },
-            //     { id: '2', name: 'Abandoned Cart Recovery', status: 'draft', description: 'Remind after 1h. Check purchase. Send discount if needed.', n8n_workflow_id: 'mock-2' },
-            //     { id: '3', name: 'Lead Qualification', status: 'inactive', description: 'Ask budget, location, and timeline. Tag qualified leads.', n8n_workflow_id: 'mock-3' }
-            // ]);
         } finally {
             setLoading(false);
         }

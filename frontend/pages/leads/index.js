@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../contexts/AuthContext';
-import { leadsAPI } from '../../utils/api';
+import { contactsAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
@@ -137,19 +137,19 @@ export default function Leads() {
         page: currentPage,
         limit: 20,
         search: searchTerm,
-        status: statusFilter
+        tag: statusFilter // V1 doc uses 'tag' for filtering
       };
 
-      const response = await leadsAPI.getLeads(params);
-      setLeads(response.data.data || []);
-      setTotalPages(Math.ceil((response.data.total || 0) / 20));
+      const response = await contactsAPI.getContacts(params);
+      const data = response.data;
+      setLeads(data.contacts || []);
+      setTotalPages(data.pages || Math.ceil((data.total || 0) / 20));
     } catch (error) {
       console.error('Failed to fetch leads:', error);
       // Fallback data for demo if API fails
       setLeads([
-        { id: 1, name: 'Michael Wilson', phone: '910000000025', status: 'new', location: 'Mumbai', budget_min: 5000000, budget_max: 7500000, lead_score: 10, last_contact: null },
-        { id: 2, name: 'Alice Johnson', phone: '910000000024', status: 'qualified', location: 'Bangalore', budget_min: 12000000, budget_max: 15000000, lead_score: 85, last_contact: '2023-10-25' },
-        { id: 3, name: 'Robert Brown', phone: '910000000023', status: 'interested', location: 'Delhi', budget_min: 8000000, budget_max: 10000000, lead_score: 60, last_contact: '2023-11-01' },
+        { _id: '1', name: 'Michael Wilson', phone: '910000000025', status: 'new', location: 'Mumbai', budget_min: 5000000, budget_max: 7500000, lead_score: 10, last_contact: null },
+        { _id: '2', name: 'Alice Johnson', phone: '910000000024', status: 'qualified', location: 'Bangalore', budget_min: 12000000, budget_max: 15000000, lead_score: 85, last_contact: '2023-10-25' },
       ]);
       setTotalPages(1);
     } finally {

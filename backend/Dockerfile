@@ -1,16 +1,16 @@
-FROM node:20-alpine
-
+# Stage 1: deps
+FROM node:20-alpine AS deps
 WORKDIR /app
-
-# Install dependencies first for better caching
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
-# Copy the rest of the application code
+# Stage 2: runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Expose the backend port
 EXPOSE 3001
-
-# Start the application
 CMD ["npm", "start"]

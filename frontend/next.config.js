@@ -37,6 +37,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/external-api/:path*',
+        destination: 'https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

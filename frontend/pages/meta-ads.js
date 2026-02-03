@@ -27,17 +27,17 @@ export default function MetaAds() {
 
     const fetchCampaigns = async () => {
         try {
-            // Using mock data as per previous implementation logic
-            // In a real scenario, this would call metaAdsAPI.getCampaigns()
-            setCampaigns([
-                { id: 'cam_1', name: 'Luxury Villas Promo', status: 'ACTIVE', spend: 4500, clicks: 120, leads: 15 },
-                { id: 'cam_2', name: 'Budget Homes', status: 'PAUSED', spend: 1200, clicks: 45, leads: 2 },
-                { id: 'cam_3', name: 'Retargeting - Site Visitors', status: 'ACTIVE', spend: 2100, clicks: 88, leads: 9 },
-                { id: 'cam_4', name: 'Brand Awareness', status: 'COMPLETED', spend: 10000, clicks: 500, leads: 5 }
-            ]);
+            const res = await metaAdsAPI.getCampaigns();
+            const data = res.data;
+            setCampaigns(Array.isArray(data) ? data : (data.data || []));
             setLoading(false);
         } catch (error) {
             console.error(error);
+            // Mock data fallback
+            setCampaigns([
+                { id: 'cam_1', name: 'Luxury Villas Promo', status: 'ACTIVE', spend: 4500, clicks: 120, leads: 15 },
+                { id: 'cam_2', name: 'Budget Homes', status: 'PAUSED', spend: 1200, clicks: 45, leads: 2 },
+            ]);
             setLoading(false);
         }
     };

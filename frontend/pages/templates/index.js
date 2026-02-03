@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '../components/Layout';
-import { useAuth } from '../contexts/AuthContext';
-import { templatesAPI } from '../utils/api';
+import Layout from '../../components/Layout';
+import { useAuth } from '../../contexts/AuthContext';
+import { templatesAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
@@ -35,11 +35,11 @@ const TemplateCard = ({ template, onEdit, onDelete, onPreview, onUse }) => (
             System
           </span>
         )}
-        <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${template.is_approved
+        <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${template.status === 'APPROVED'
           ? 'bg-green-500/10 text-green-500 border border-green-500/20'
           : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
           }`}>
-          {template.is_approved ? 'Approved' : 'Pending'}
+          {template.status || 'PENDING'}
         </span>
       </div>
     </div>
@@ -48,26 +48,27 @@ const TemplateCard = ({ template, onEdit, onDelete, onPreview, onUse }) => (
       <p className="text-sm text-gray-300 line-clamp-3">
         {(() => {
           let contentStr = '';
-          if (typeof template.content === 'string') {
+          if (Array.isArray(template.components)) {
+            const bodyComponent = template.components.find(c => c.type === 'BODY');
+            contentStr = bodyComponent?.text || '';
+          } else if (typeof template.content === 'string') {
             contentStr = template.content;
-          } else if (typeof template.content === 'object' && template.content !== null) {
-            contentStr = template.content.body || template.content.message || JSON.stringify(template.content);
           }
           return contentStr.length > 150 ? contentStr.substring(0, 150) + '...' : contentStr;
         })()}
       </p>
     </div>
 
-    {template.variables && Object.keys(template.variables).length > 0 && (
+    {template.components && template.components.some(c => c.text?.includes('{{')) && (
       <div className="mb-4">
-        <p className="text-xs text-gray-500 mb-2">Variables:</p>
+        <p className="text-xs text-gray-500 mb-2">Placeholders Detected</p>
         <div className="flex flex-wrap gap-2">
-          {Object.keys(template.variables).map((variable) => (
+          {template.components.flatMap(c => c.text?.match(/{{(\d+)}}/g) || []).map((placeholder) => (
             <span
-              key={variable}
+              key={placeholder}
               className="px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20"
             >
-              {variable}
+              {placeholder}
             </span>
           ))}
         </div>
@@ -76,7 +77,7 @@ const TemplateCard = ({ template, onEdit, onDelete, onPreview, onUse }) => (
 
     <div className="pt-4 border-t border-border/50 flex items-center justify-between">
       <div className="text-sm text-gray-400">
-        Used <span className="text-white font-medium">{template.usage_count || 0}</span> times
+        Language: <span className="text-white font-medium">{template.language}</span>
       </div>
       <div className="flex gap-2">
         <button
@@ -86,24 +87,13 @@ const TemplateCard = ({ template, onEdit, onDelete, onPreview, onUse }) => (
           <EyeIcon className="h-4 w-4 mr-1.5" />
           Preview
         </button>
-        {!template.is_system && (
-          <>
-            <button
-              onClick={() => onEdit(template)}
-              className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-gray-300 bg-muted hover:bg-muted/80 border border-border/50 hover:border-border transition-all"
-            >
-              <PencilIcon className="h-4 w-4 mr-1.5" />
-              Edit
-            </button>
-            <button
-              onClick={() => onDelete(template)}
-              className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 transition-all"
-            >
-              <TrashIcon className="h-4 w-4 mr-1.5" />
-              Delete
-            </button>
-          </>
-        )}
+        <button
+          onClick={() => onDelete(template)}
+          className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 transition-all"
+        >
+          <TrashIcon className="h-4 w-4 mr-1.5" />
+          Delete
+        </button>
         <button
           onClick={() => onUse(template)}
           className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-black bg-primary hover:bg-primary/90 transition-all shadow-glow-sm"
@@ -139,24 +129,17 @@ const TemplatePreviewModal = ({ template, isOpen, onClose }) => {
               </button>
             </div>
             <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-              <p className="text-sm text-gray-300 whitespace-pre-wrap">
-                {typeof template.content === 'string'
-                  ? template.content
-                  : (template.content?.body || JSON.stringify(template.content, null, 2))}
-              </p>
-            </div>
-            {template.variables && Object.keys(template.variables).length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-sm font-semibold text-white mb-2">Available Variables:</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(template.variables).map(([key, description]) => (
-                    <div key={key} className="text-xs text-gray-400">
-                      <span className="font-medium text-primary">{key}:</span> {description}
+              <div className="text-sm text-gray-300 whitespace-pre-wrap">
+                {Array.isArray(template.components)
+                  ? template.components.map((c, i) => (
+                    <div key={i} className="mb-2">
+                      <span className="text-xs text-primary uppercase font-bold">{c.type}:</span>
+                      <p>{c.text}</p>
                     </div>
-                  ))}
-                </div>
+                  ))
+                  : (template.content?.body || JSON.stringify(template.content, null, 2))}
               </div>
-            )}
+            </div>
           </div>
           <div className="bg-muted/20 px-6 py-4 flex justify-end border-t border-border/50">
             <button
@@ -198,12 +181,16 @@ export default function Templates() {
         category: categoryFilter
       };
 
+      console.log('Fetching templates with params:', params);
       const response = await templatesAPI.getTemplates(params);
-      setTemplates(response.data.data);
+      console.log('Templates Response:', response);
+      const data = response.data;
+      setTemplates(Array.isArray(data) ? data : (data.data || []));
     } catch (error) {
       console.error('Failed to fetch templates:', error);
-      toast.error('Failed to load templates');
+      toast.error('Failed to load templates details: ' + (error.message || 'Unknown error'));
     } finally {
+      console.log('Fetch finished, setting loading to false');
       setLoading(false);
     }
   };
@@ -214,7 +201,7 @@ export default function Templates() {
     }
 
     try {
-      await templatesAPI.deleteTemplate(template.id);
+      await templatesAPI.deleteTemplate(template.name);
       toast.success('Template deleted successfully');
       fetchTemplates();
     } catch (error) {

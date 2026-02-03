@@ -18,7 +18,6 @@ export default function Document() {
         <meta name="description" content="RealNex CRM - Revolutionizing real estate marketing through intelligent WhatsApp automation" />
         <meta name="keywords" content="real estate CRM, WhatsApp automation, property management, lead generation" />
         <meta name="author" content="RealNex CRM" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         {/* Open Graph meta tags */}
         <meta property="og:title" content="RealNex CRM - Real Estate WhatsApp Automation" />

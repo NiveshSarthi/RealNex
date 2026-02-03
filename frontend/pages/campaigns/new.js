@@ -56,7 +56,9 @@ export default function NewCampaign() {
     const fetchTemplates = async () => {
         try {
             const response = await templatesAPI.getTemplates();
-            setTemplates(response.data.data.filter(t => t.is_approved) || []);
+            // API returns direct array
+            const data = Array.isArray(response.data) ? response.data : (response.data.data || []);
+            setTemplates(data.filter(t => t.status === 'APPROVED') || []);
         } catch (error) {
             // Mock templates if API fails
             setTemplates([
@@ -69,7 +71,9 @@ export default function NewCampaign() {
     const fetchLeads = async () => {
         try {
             const response = await leadsAPI.getLeads({ limit: 100 });
-            setLeads(response.data.data || []);
+
+            // API returns { contacts: [...] }
+            setLeads(response.data.contacts || []);
         } catch (error) {
             console.error('Failed to fetch leads:', error);
         }
@@ -94,10 +98,42 @@ export default function NewCampaign() {
     const handleSubmit = async () => {
         setLoading(true);
         try {
+            // Find selected template to get its name
+            const selectedTemplate = templates.find(t => t.id === formData.templateId);
+
+            // 1. Prepare Contact IDs
+            let contactIds = [];
+            if (formData.audienceType === 'all') {
+                // If all leads, we might need to fetch them all first to get IDs, 
+                // OR if the API supports a special "all" flag (not documented), we'd use that.
+                // Based on doc, we need contact_ids. So we use the loaded leads.
+                // If leads are paginated, this might miss some, but for now we use what we have.
+                if (leads.length === 0) {
+                    // Try to fetch if empty
+                    const leadRes = await leadsAPI.getLeads({ limit: 1000 }); // Increase limit
+                    contactIds = (leadRes.data.contacts || []).map(l => l._id);
+                } else {
+                    contactIds = leads.map(l => l._id);
+                }
+            } else {
+                // Handle segment logic later
+                contactIds = [];
+            }
+
+            if (contactIds.length === 0) {
+                toast.error('No contacts selected for this campaign');
+                setLoading(false);
+                return;
+            }
+
             const payload = {
-                ...formData,
-                status: formData.isImmediate ? 'scheduled' : 'draft',
-                scheduled_at: formData.isImmediate ? new Date().toISOString() : formData.scheduledAt
+                template_name: selectedTemplate?.name,
+                language_code: 'en_US', // Required by API
+                contact_ids: contactIds,
+                variable_mapping: { "1": "Valued Customer" }, // Default mapping for now
+                // status: formData.isImmediate ? 'scheduled' : 'draft', // API might not take status in create
+                // scheduled_at: formData.isImmediate ? null : formData.scheduledAt // API uses schedule_time
+                schedule_time: formData.isImmediate ? null : formData.scheduledAt
             };
 
             await campaignsAPI.createCampaign(payload);

@@ -1,7 +1,15 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const WA_API_BASE_URL = '/external-api';
+const WA_CREDENTIALS = {
+  email: 'Syndicate@niveshsarthi.com',
+  password: 'Syndicate@123'
+};
 
+// ----------------------------------------------------------------------
+// Main Internal API Instance (Local Backend)
+// ----------------------------------------------------------------------
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -9,107 +17,191 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    const isAuthRequest = error.config?.url?.includes('/api/auth/me');
-
-    if (error.response?.status === 401) {
-      // Only redirect if it's not the initial profile check failing (which checkAuth handles)
-      // or if it's a definitive "token invalid" message
-      const message = error.response.data?.message || '';
-      const isTokenInvalid = message.toLowerCase().includes('token') ||
-        message.toLowerCase().includes('expired') ||
-        message.toLowerCase().includes('session');
-
-      if (isTokenInvalid && typeof window !== 'undefined' && window.location.pathname !== '/') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/';
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      if (typeof window !== 'undefined') {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (refreshToken) {
+          try {
+            const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, { refresh_token: refreshToken });
+            const { access_token } = response.data;
+            localStorage.setItem('access_token', access_token);
+            originalRequest.headers.Authorization = `Bearer ${access_token}`;
+            return axios(originalRequest);
+          } catch (refreshError) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+          }
+        }
       }
     }
     return Promise.reject(error);
   }
 );
 
+// ----------------------------------------------------------------------
+// External WhatsApp API Instance (Direct Connection)
+// ----------------------------------------------------------------------
+const waApi = axios.create({
+  baseURL: WA_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 30000, // 30 seconds
+});
+
+// Helper to perform system login for WhatsApp features
+const performWaSystemLogin = async () => {
+  try {
+    const response = await axios.post(`${WA_API_BASE_URL}/auth/login`, WA_CREDENTIALS);
+    const { access_token, refresh_token } = response.data;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('wa_access_token', access_token);
+      localStorage.setItem('wa_refresh_token', refresh_token);
+    }
+    return access_token;
+  } catch (error) {
+    console.error('WhatsApp System Login Failed:', error);
+    throw error;
+  }
+};
+
+waApi.interceptors.request.use(
+  async (config) => {
+    if (typeof window !== 'undefined') {
+      let token = localStorage.getItem('wa_access_token');
+      // If no token exists, try logging in first
+      if (!token && !config._isRetry) {
+        try {
+          token = await performWaSystemLogin();
+        } catch (e) {
+          // If login fails, proceed without token (will likely fail 401)
+        }
+      }
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log(`[WA API] Making request to: ${config.url} with token`);
+      } else {
+        console.warn(`[WA API] Making request to: ${config.url} WITHOUT token`);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+waApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Check if this is a specialized auth request to avoid infinite loops
+    if (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/refresh')) {
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      originalRequest._isRetry = true; // Mark custom flag
+
+      if (typeof window !== 'undefined') {
+        const refreshToken = localStorage.getItem('wa_refresh_token');
+
+        // 1. Try Refreshing
+        if (refreshToken) {
+          try {
+            const response = await axios.post(`${WA_API_BASE_URL}/auth/refresh`, { refresh_token: refreshToken });
+            const { access_token } = response.data;
+            localStorage.setItem('wa_access_token', access_token);
+            originalRequest.headers.Authorization = `Bearer ${access_token}`;
+            return waApi(originalRequest);
+          } catch (refreshError) {
+            // Refresh failed, fall through to re-login
+          }
+        }
+
+        // 2. If refresh failed or didn't exist, try System Re-Login
+        try {
+          const newToken = await performWaSystemLogin();
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return waApi(originalRequest);
+        } catch (loginError) {
+          console.error('Critical: WA System Auth failed completely.');
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+
 export default api;
 
-// Authentication API
+// ----------------------------------------------------------------------
+// API Modules
+// ----------------------------------------------------------------------
+
+// Authentication API (Internal Backend)
 export const authAPI = {
   login: (credentials) => api.post('/api/auth/login', credentials),
-  register: (userData) => api.post('/api/auth/register', userData),
+  refresh: (refreshToken) => api.post('/api/auth/refresh', { refresh_token: refreshToken }),
   getProfile: () => api.get('/api/auth/me'),
   updateProfile: (data) => api.put('/api/auth/update-profile', data),
 };
 
-// Dashboard API
-export const dashboardAPI = {
-  getOverview: () => api.get('/api/analytics/overview'),
+// Contacts API (External WhatsApp API)
+export const contactsAPI = {
+  getContacts: (params) => waApi.get('/api/v1/contacts', { params }),
+  getContact: (id) => waApi.get(`/api/v1/contacts/${id}`),
+  createContact: (data) => waApi.post('/api/v1/contacts', data),
+  uploadContacts: (formData) => waApi.post('/api/v1/contacts/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
-// Leads API
-export const leadsAPI = {
-  getLeads: (params) => api.get('/api/leads', { params }),
-  getLead: (id) => api.get(`/api/leads/${id}`),
-  createLead: (data) => api.post('/api/leads', data),
-  updateLead: (id, data) => api.put(`/api/leads/${id}`, data),
-  deleteLead: (id) => api.delete(`/api/leads/${id}`),
-  getLeadStats: () => api.get('/api/leads/stats/overview'),
-  importLeads: (data) => api.post('/api/leads/import', data),
-};
-
-// Campaigns API
-// Campaigns API (mapped to Broadcasts backend)
+// Campaigns API (External WhatsApp API)
 export const campaignsAPI = {
-  getCampaigns: (params) => api.get('/api/broadcasts', { params }),
-  getCampaign: (id) => api.get(`/api/broadcasts/${id}`),
-  createCampaign: (data) => api.post('/api/broadcasts', data),
-  updateCampaign: (id, data) => api.put(`/api/broadcasts/${id}`, data),
-  deleteCampaign: (id) => api.delete(`/api/broadcasts/${id}`),
-  sendCampaign: (id) => api.post(`/api/broadcasts/${id}/send`),
-  getAudience: (id, params) => api.get(`/api/broadcasts/${id}/recipients`, { params }), // Endpoint name diff
-  getAudienceSize: (id) => api.post(`/api/broadcasts/${id}/audience-size`), // Method/path diff check
-  getPerformance: (id) => api.get(`/api/broadcasts/${id}/performance`), // Might not exist
-  getABTestResults: (id) => api.get(`/api/broadcasts/${id}/ab-test-results`), // Might not exist
-  getStats: () => api.get('/api/broadcasts/stats/overview'),
-  preview: (data) => api.post('/api/broadcasts/preview', data), // Might not exist
+  getCampaigns: (params) => waApi.get('/api/v1/campaigns', { params }),
+  getCampaign: (id) => waApi.get(`/api/v1/campaigns/${id}`),
+  getLogs: (id, params) => waApi.get(`/api/v1/campaigns/${id}/logs`, { params }),
+  createCampaign: (data) => waApi.post('/api/v1/campaigns', data),
+  deleteCampaign: (id) => waApi.delete(`/api/v1/campaigns/${id}`),
 };
 
-// Templates API
+// Templates API (External WhatsApp API)
 export const templatesAPI = {
-  getTemplates: (params) => api.get('/api/templates', { params }),
-  getTemplate: (id) => api.get(`/api/templates/${id}`),
-  createTemplate: (data) => api.post('/api/templates', data),
-  updateTemplate: (id, data) => api.put(`/api/templates/${id}`, data),
-  deleteTemplate: (id) => api.delete(`/api/templates/${id}`),
-  previewTemplate: (id, data) => api.post(`/api/templates/${id}/preview`, data),
-  getCategories: () => api.get('/api/templates/categories'),
+  getTemplates: (params) => waApi.get('/api/v1/templates', { params }),
+  createTemplate: (data) => waApi.post('/api/v1/templates', data),
+  deleteTemplate: (name) => waApi.delete(`/api/v1/templates/${name}`),
 };
 
-// Drip Sequences API
+// Drip Sequences API (Now using V1 if applicable, otherwise preserving existing)
 export const dripSequencesAPI = {
-  getSequences: (params) => api.get('/api/drip-sequences', { params }),
-  getSequence: (id) => api.get(`/api/drip-sequences/${id}`),
-  createSequence: (data) => api.post('/api/drip-sequences', data),
-  updateSequence: (id, data) => api.put(`/api/drip-sequences/${id}`, data),
-  deleteSequence: (id) => api.delete(`/api/drip-sequences/${id}`),
+  getSequences: (params) => api.get('/api/v1/drip-sequences', { params }),
+  createSequence: (data) => api.post('/api/v1/drip-sequences', data),
+  // Existing structure kept for internal features not yet in V1 doc
+  getSequence: (id) => api.get(`/api/v1/drip-sequences/${id}`),
+  updateSequence: (id, data) => api.put(`/api/v1/drip-sequences/${id}`, data),
+  deleteSequence: (id) => api.delete(`/api/v1/drip-sequences/${id}`),
   activateSequence: (id) => api.post(`/api/drip-sequences/${id}/activate`),
   deactivateSequence: (id) => api.post(`/api/drip-sequences/${id}/deactivate`),
   addStep: (id, data) => api.post(`/api/drip-sequences/${id}/steps`, data),

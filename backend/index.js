@@ -36,6 +36,11 @@ const lmsRoutes = require('./routes/lms');
 const metaAdsRoutes = require('./routes/metaAds');
 const dripSequencesRoutes = require('./routes/dripSequences');
 const leadsRoutes = require('./routes/leads');
+const catalogRoutes = require('./routes/catalog');
+const monitoringRoutes = require('./routes/monitoring');
+const collaborationRoutes = require('./routes/collaborations');
+const agentNetworkRoutes = require('./routes/agentNetwork');
+const campaignsRoutes = require('./routes/campaigns');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -96,6 +101,11 @@ app.use('/api/lms', lmsRoutes);
 app.use('/api/meta-ads', metaAdsRoutes);
 app.use('/api/drip-sequences', dripSequencesRoutes);
 app.use('/api/v1/contacts', leadsRoutes);
+app.use('/api/catalog', catalogRoutes);
+app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/collaborations', collaborationRoutes);
+app.use('/api/agent-network', agentNetworkRoutes);
+app.use('/api/campaigns', campaignsRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -11,6 +11,9 @@ COPY synditech/backend/package-lock.json ./
 # Install dependencies
 RUN npm ci --omit=dev
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 # Copy source code
 COPY synditech/backend/ ./
 

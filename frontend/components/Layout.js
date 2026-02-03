@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useAuth } from '../contexts/AuthContext';
 import {
   HomeIcon,
   UsersIcon,
@@ -62,9 +62,9 @@ const navigation = [
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
-  const router = useRouter();
+  const { router } = useAuth();
 
   // Auto-expand menus that have an active child
   useEffect(() => {

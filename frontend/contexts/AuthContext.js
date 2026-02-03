@@ -1,13 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../utils/api';
-import { useRouter } from 'next/router';
+import Router from 'next/router';
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children, router }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     // Only check auth if we have an access token
@@ -115,9 +114,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     setUser(null);
-    if (router) {
-      router.push('/');
-    }
+    Router.push('/');
   };
 
   const updateProfile = async (profileData) => {
@@ -144,6 +141,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     updateProfile,
+    router,
     isAuthenticated: !!user
   };
 

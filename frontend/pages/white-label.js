@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { whiteLabelAPI } from '../utils/api';
-import { PhotographIcon, ColorSwatchIcon, GlobeAltIcon, DeviceMobileIcon } from '@heroicons/react/24/outline';
+import { PhotoIcon, SwatchIcon, GlobeAltIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 
 const WhiteLabelSettings = () => {
   const [config, setConfig] = useState(null);
@@ -71,7 +71,7 @@ const WhiteLabelSettings = () => {
         <div className="max-w-4xl mx-auto py-8">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
             <div className="flex items-center">
-              <ColorSwatchIcon className="h-8 w-8 text-yellow-600 mr-3" />
+              <SwatchIcon className="h-8 w-8 text-yellow-600 mr-3" />
               <div>
                 <h3 className="text-lg font-medium text-yellow-800">White-Label Features Not Available</h3>
                 <p className="text-yellow-700 mt-1">
@@ -105,7 +105,7 @@ const WhiteLabelSettings = () => {
           {/* Company Branding */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center mb-6">
-              <PhotographIcon className="h-6 w-6 text-blue-600 mr-3" />
+              <PhotoIcon className="h-6 w-6 text-blue-600 mr-3" />
               <h2 className="text-xl font-semibold text-gray-900">Company Branding</h2>
             </div>
 
@@ -167,7 +167,7 @@ const WhiteLabelSettings = () => {
           {/* Color Scheme */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center mb-6">
-              <ColorSwatchIcon className="h-6 w-6 text-purple-600 mr-3" />
+              <SwatchIcon className="h-6 w-6 text-purple-600 mr-3" />
               <h2 className="text-xl font-semibold text-gray-900">Color Scheme</h2>
             </div>
 
@@ -261,7 +261,7 @@ const WhiteLabelSettings = () => {
           {/* Mobile App Branding */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center mb-6">
-              <DeviceMobileIcon className="h-6 w-6 text-indigo-600 mr-3" />
+              <DevicePhoneMobileIcon className="h-6 w-6 text-indigo-600 mr-3" />
               <h2 className="text-xl font-semibold text-gray-900">Mobile App Branding</h2>
             </div>
 

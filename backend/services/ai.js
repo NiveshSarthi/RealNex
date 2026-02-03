@@ -3,9 +3,23 @@ const { query } = require('../config/database');
 
 class AIService {
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    this.apiKey = process.env.OPENAI_API_KEY;
+    this.mockMode = !this.apiKey || this.apiKey === 'your_openai_api_key_here';
+
+    if (!this.mockMode) {
+      this.openai = new OpenAI({
+        apiKey: this.apiKey,
+      });
+    } else {
+      console.warn('AIService: OPENAI_API_KEY is missing. Entering Mock Mode.');
+      this.openai = {
+        chat: {
+          completions: {
+            create: () => { throw new Error('AI Mock Mode: OpenAI key missing'); }
+          }
+        }
+      };
+    }
 
     // AI prompt templates
     this.prompts = {

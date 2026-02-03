@@ -173,9 +173,21 @@ export const contactsAPI = {
   getContacts: (params) => waApi.get('/api/v1/contacts', { params }),
   getContact: (id) => waApi.get(`/api/v1/contacts/${id}`),
   createContact: (data) => waApi.post('/api/v1/contacts', data),
+  updateContact: (id, data) => waApi.put(`/api/v1/contacts/${id}`, data),
+  deleteContact: (id) => waApi.delete(`/api/v1/contacts/${id}`),
   uploadContacts: (formData) => waApi.post('/api/v1/contacts/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+};
+
+// Aliasing contactsAPI to leadsAPI for backward compatibility
+export const leadsAPI = {
+  ...contactsAPI,
+  getLeads: contactsAPI.getContacts,
+  getLead: contactsAPI.getContact,
+  createLead: contactsAPI.createContact,
+  updateLead: contactsAPI.updateContact,
+  deleteLead: contactsAPI.deleteContact,
 };
 
 // Campaigns API (External WhatsApp API)

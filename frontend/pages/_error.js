@@ -5,7 +5,7 @@ import {
   ExclamationTriangleIcon,
   ArrowLeftIcon,
   HomeIcon,
-  RefreshIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 function Error({ statusCode, title, message }) {
@@ -81,7 +81,7 @@ function Error({ statusCode, title, message }) {
               onClick={() => router.reload()}
               className="btn btn-primary w-full h-12"
             >
-              <RefreshIcon className="h-5 w-5 mr-2" />
+              <ArrowPathIcon className="h-5 w-5 mr-2" />
               Try Again
             </button>
 

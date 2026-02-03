@@ -68,6 +68,8 @@ export default function Layout({ children }) {
 
   // Auto-expand menus that have an active child
   useEffect(() => {
+    if (!router || !router.pathname) return;
+
     const newExpanded = { ...expandedMenus };
     let changed = false;
     navigation.forEach(item => {
@@ -81,7 +83,7 @@ export default function Layout({ children }) {
     if (changed) {
       setExpandedMenus(newExpanded);
     }
-  }, [router.pathname]);
+  }, [router?.pathname]);
 
   // Handle screen resize to auto-collapse on smaller screens
   useEffect(() => {
@@ -108,8 +110,8 @@ export default function Layout({ children }) {
   };
 
   const NavItem = ({ item, isCollapsed, isSubItem = false }) => {
-    const isActive = router.pathname === item.href;
-    const isChildActive = item.children?.some(child => router.pathname === child.href);
+    const isActive = router?.pathname === item.href;
+    const isChildActive = item.children?.some(child => router?.pathname === child.href);
     const isExpanded = expandedMenus[item.name];
 
     if (item.children && !isCollapsed) {

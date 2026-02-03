@@ -115,7 +115,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     setUser(null);
-    router.push('/');
+    if (router) {
+      router.push('/');
+    }
   };
 
   const updateProfile = async (profileData) => {

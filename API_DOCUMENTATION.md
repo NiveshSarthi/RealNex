@@ -4,7 +4,7 @@
 
 This API allows external applications to integrate with WhatsApp Flow Builder for managing templates, contacts, and campaigns.
 
-**Base URL:** `https://your-domain.com/api/v1`
+**Base URL:** `https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1`
 
 ---
 
@@ -17,7 +17,7 @@ All endpoints require JWT Bearer token authentication.
 **POST** `/auth/login`
 
 ```bash
-curl -X POST https://your-domain.com/auth/login \
+curl -X POST https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "your-email@example.com",
@@ -40,7 +40,7 @@ curl -X POST https://your-domain.com/auth/login \
 Include the access token in all API requests:
 
 ```bash
-curl https://your-domain.com/api/v1/templates \
+curl https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/templates \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -54,7 +54,7 @@ To refresh your token:
 **POST** `/auth/refresh`
 
 ```bash
-curl -X POST https://your-domain.com/auth/refresh \
+curl -X POST https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{"refresh_token": "YOUR_REFRESH_TOKEN"}'
 ```
@@ -70,7 +70,7 @@ curl -X POST https://your-domain.com/auth/refresh \
 Fetch all WhatsApp templates for your organization.
 
 ```bash
-curl https://your-domain.com/api/v1/templates \
+curl https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/templates \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -93,7 +93,7 @@ curl https://your-domain.com/api/v1/templates \
 **POST** `/api/v1/templates`
 
 ```bash
-curl -X POST https://your-domain.com/api/v1/templates \
+curl -X POST https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/templates \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -116,7 +116,7 @@ curl -X POST https://your-domain.com/api/v1/templates \
 **DELETE** `/api/v1/templates/{name}`
 
 ```bash
-curl -X DELETE https://your-domain.com/api/v1/templates/my_template \
+curl -X DELETE https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/templates/my_template \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -136,7 +136,7 @@ curl -X DELETE https://your-domain.com/api/v1/templates/my_template \
 | tag       | string | Filter by tag                          |
 
 ```bash
-curl "https://your-domain.com/api/v1/contacts?page=1&limit=20&tag=lead" \
+curl "https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/contacts?page=1&limit=20&tag=lead" \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -163,7 +163,7 @@ curl "https://your-domain.com/api/v1/contacts?page=1&limit=20&tag=lead" \
 **POST** `/api/v1/contacts`
 
 ```bash
-curl -X POST https://your-domain.com/api/v1/contacts \
+curl -X POST https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/contacts \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -188,7 +188,7 @@ Jane Smith,919876543211,customer
 ```
 
 ```bash
-curl -X POST https://your-domain.com/api/v1/contacts/upload \
+curl -X POST https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/contacts/upload \
   -H "Authorization: Bearer TOKEN" \
   -F "file=@contacts.csv"
 ```
@@ -202,7 +202,7 @@ curl -X POST https://your-domain.com/api/v1/contacts/upload \
 **GET** `/api/v1/campaigns`
 
 ```bash
-curl https://your-domain.com/api/v1/campaigns \
+curl https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/campaigns \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -231,7 +231,7 @@ curl https://your-domain.com/api/v1/campaigns \
 **GET** `/api/v1/campaigns/{campaign_id}`
 
 ```bash
-curl https://your-domain.com/api/v1/campaigns/60f7c123... \
+curl https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/campaigns/60f7c123... \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -244,7 +244,7 @@ curl https://your-domain.com/api/v1/campaigns/60f7c123... \
 | status    | string | Filter by status: sent, delivered, read, failed |
 
 ```bash
-curl "https://your-domain.com/api/v1/campaigns/60f7c.../logs?status=failed" \
+curl "https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/campaigns/60f7c.../logs?status=failed" \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -255,7 +255,7 @@ curl "https://your-domain.com/api/v1/campaigns/60f7c.../logs?status=failed" \
 Send messages immediately or schedule for later.
 
 ```bash
-curl -X POST https://your-domain.com/api/v1/campaigns \
+curl -X POST https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/campaigns \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -332,7 +332,7 @@ All errors follow this format:
 
 ```javascript
 // 1. Login and get token
-const loginResponse = await $http.post("https://your-domain.com/auth/login", {
+const loginResponse = await $http.post("https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/auth/login", {
   email: "admin@example.com",
   password: "password",
 });
@@ -340,7 +340,7 @@ const token = loginResponse.data.access_token;
 
 // 2. Get contacts with specific tag
 const contacts = await $http.get(
-  "https://your-domain.com/api/v1/contacts?tag=lead",
+  "https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/contacts?tag=lead",
   {
     headers: { Authorization: `Bearer ${token}` },
   },
@@ -348,7 +348,7 @@ const contacts = await $http.get(
 
 // 3. Start a campaign
 const campaign = await $http.post(
-  "https://your-domain.com/api/v1/campaigns",
+  "https://ckk4swcsssos844w0ccos4og.72.61.248.175.sslip.io/api/v1/campaigns",
   {
     template_name: "welcome_message",
     filters: { tag: "new" },
